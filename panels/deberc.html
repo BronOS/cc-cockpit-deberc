@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Deberc</title>
+    <!-- CSP: scripts only from this plugin's own files, so the code is in view.js (pure helpers) and deberc.js (the
+         drawing and the input). The rules stay in the host: the page never sees the deck or the others' cards. -->
+    <script src="../__sdk/panel.js"></script>
+    <link rel="stylesheet" href="deberc.css" />
+    <script src="view.js"></script>
+    <script src="deberc.js" defer></script>
+  </head>
+  <body>
+    <div class="db">
+      <div class="board">
+        <div class="felt" id="felt" tabindex="0" aria-label="Deberc: tap a card to play it; N starts a new game">
+          <button type="button" class="score" id="score" title="Score sheet"></button>
+          <div class="seats" id="seats"></div>
+          <div class="mid">
+            <div class="trumpbox" id="trumpbox"></div>
+            <div class="trick" id="trick"></div>
+          </div>
+          <div class="status" id="status" aria-live="polite"></div>
+          <div class="acts" id="acts"></div>
+          <div class="me" id="me">
+            <div class="mine" id="mine"></div>
+            <div class="hand" id="hand"></div>
+          </div>
+        </div>
+        <div class="cc-empty" id="loading"><span class="cc-spinner"></span></div>
+        <div class="cover" id="cover" hidden></div>
+      </div>
+      <div class="foot">
+        <span class="grow"></span><span id="modeinfo"></span><span>Won <b id="won">0</b></span><span>Lost <b id="lost">0</b></span>
+      </div>
+    </div>
+  </body>
+</html>

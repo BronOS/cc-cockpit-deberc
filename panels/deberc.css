@@ -1,0 +1,644 @@
+/* Deberc panel. The page's frame, text and controls take the app's theme variables (ccc guide panels), so light and
+   dark themes and any plugin theme work. The felt and the cards have their own palette, one per theme kind through
+   light-dark() (the SDK sets `color-scheme` on :root to the theme's kind). No state rests on a colour alone: every
+   card prints its rank and suit symbol, a trump carries a gold corner tab, the dealer's badge is round, the taker's
+   carries a star, a pass is dashed, whose move it is gets an outline, the card winning a full trick a thick one, your
+   side's score row a ▸ and bold, the others' bars a striped fill. */
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--cc-bg);
+  color: var(--cc-fg);
+  font: var(--cc-text-m) / 1.4 var(--cc-font-ui);
+}
+* {
+  box-sizing: border-box;
+}
+/* Plugin pages get no reset: a class rule with a display beats the hidden attribute, so hidden always wins here. */
+[hidden] {
+  display: none !important;
+}
+
+:root {
+  /* The felt: a deep green in the dark, a lighter one on a light page; its text is always light. */
+  --d-felt: light-dark(#3b7659, #1d2a26);
+  --d-felt-fg: light-dark(#f4f8f5, #d6dcd9);
+  --d-felt-muted: light-dark(#d3e6dc, #8fa69c);
+  --d-hint: light-dark(#cde3d7, #6f8d84);
+  --d-seat: light-dark(rgba(10, 40, 25, 0.22), rgba(0, 0, 0, 0.18));
+  --d-score: light-dark(rgba(10, 40, 25, 0.28), rgba(0, 0, 0, 0.22));
+  --d-score-hover: light-dark(rgba(10, 40, 25, 0.38), rgba(0, 0, 0, 0.32));
+  --d-track: light-dark(rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+  --d-chip-line: light-dark(#9cc8b1, #4b5f58);
+  /* Whose move: blue. The card winning the trick and a meld: green. The taker: gold. */
+  --d-turn: light-dark(#d4e4ff, #7aa2f7);
+  --d-ok: light-dark(#a8f5c8, #9ece6a);
+  --d-gold: #e0af68;
+  --d-other-a: light-dark(#eef2f0, #c0c4d0);
+  --d-other-b: light-dark(#a9b8b0, #8b8f9c);
+  /* Card faces: white on a light page, a touch softer in the dark so they do not glare. */
+  --d-face: light-dark(#ffffff, #f0f0f3);
+  --d-face-line: light-dark(#aeb2bc, #c3c4cc);
+  --d-red: #c8213a;
+  --d-black: #1b1c21;
+  /* The trump suit printed on the felt: bright enough to read on green. */
+  --d-red-on-felt: light-dark(#ffd0d6, #ff6b7d);
+  --d-black-on-felt: light-dark(#ffffff, #e8e8ee);
+  /* The four-colour deck: diamonds blue, clubs green, each still with its own symbol. */
+  --d-blue: #1d5fd0;
+  --d-green: #0f7a44;
+  --d-back-a: #9e3d4f;
+  --d-back-b: #b04a5d;
+  --d-back-line: #f6e8ea;
+  --d-lift: light-dark(rgba(20, 30, 25, 0.4), rgba(0, 0, 0, 0.55));
+}
+
+.db {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 240px;
+}
+
+.board {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: var(--cc-space-2) var(--cc-space-2) var(--cc-space-1);
+}
+
+.felt {
+  --cw: 44px;
+  --ch: calc(var(--cw) * 1.4);
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: var(--d-felt);
+  color: var(--d-felt-fg);
+  padding: var(--cc-space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-space-2);
+  /* A tiny panel scrolls rather than cut the hand off; the cover stays over the whole board (it is outside). */
+  overflow: hidden auto;
+  outline: none;
+  user-select: none;
+}
+.felt:focus-visible {
+  box-shadow: 0 0 0 2px var(--cc-focus);
+}
+
+/* ---- cards ---- */
+
+.card {
+  position: relative;
+  flex: none;
+  width: var(--cw);
+  height: var(--ch);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: max(4px, calc(var(--cw) * 0.1));
+  background: var(--d-face);
+  box-shadow: 0 1px 2px var(--d-lift), inset 0 0 0 1px var(--d-face-line);
+  font: inherit;
+  display: block;
+  text-align: left;
+}
+.card.red {
+  color: var(--d-red);
+}
+.card.black {
+  color: var(--d-black);
+}
+.four .card.s-d {
+  color: var(--d-blue);
+}
+.four .card.s-c {
+  color: var(--d-green);
+}
+.card .ix {
+  position: absolute;
+  left: max(2px, calc(var(--cw) * 0.07));
+  top: max(1px, calc(var(--cw) * 0.03));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-weight: 800;
+  line-height: 1;
+  font-size: max(10px, calc(var(--cw) * 0.32));
+  letter-spacing: -0.03em;
+}
+.card .ix i {
+  font-style: normal;
+  font-size: 0.92em;
+}
+.card .pip {
+  position: absolute;
+  right: max(2px, calc(var(--cw) * 0.07));
+  bottom: max(1px, calc(var(--cw) * 0.03));
+  font-size: calc(var(--cw) * 0.48);
+  line-height: 1;
+}
+/* Trumps carry a gold corner tab: a shape, not only a shade. */
+.card.trump::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  border-top-right-radius: max(4px, calc(var(--cw) * 0.1));
+  border-style: solid;
+  border-width: 0 calc(var(--cw) * 0.28) calc(var(--cw) * 0.28) 0;
+  border-color: transparent var(--d-gold) transparent transparent;
+}
+/* In an overlapped hand only a card's left strip shows: a trump's top edge is gold as well. */
+.hand .tight .card.trump::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  border-radius: max(4px, calc(var(--cw) * 0.1)) max(4px, calc(var(--cw) * 0.1)) 0 0;
+  background: var(--d-gold);
+}
+.card.back {
+  background: repeating-linear-gradient(45deg, var(--d-back-a) 0 4px, var(--d-back-b) 4px 8px);
+  box-shadow: inset 0 0 0 2px var(--d-back-line), 0 1px 2px var(--d-lift);
+}
+
+/* ---- the scoreboard: totals, a bar toward 501, this deal's points; a tap opens the score sheet ---- */
+
+.score {
+  flex: none;
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  margin: 0;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--d-score);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.score:hover {
+  background: var(--d-score-hover);
+}
+.score:focus-visible {
+  outline: 2px solid var(--cc-focus);
+  outline-offset: 1px;
+}
+.score .row {
+  display: grid;
+  grid-template-columns: minmax(4.5em, auto) 3.2em 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.score .row .nm {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.score .row b {
+  font-size: 15px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+/* Your side: a ▸ and bold, a solid bar; the others: a striped bar. */
+.score .row.me-side .nm {
+  font-weight: 700;
+}
+.score .row.me-side .nm::before {
+  content: '▸ ';
+}
+.score .track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--d-track);
+  overflow: hidden;
+}
+.score .track i {
+  display: block;
+  height: 100%;
+  background: var(--d-turn);
+}
+.score .row:not(.me-side) .track i {
+  background: repeating-linear-gradient(90deg, var(--d-other-a) 0 6px, var(--d-other-b) 6px 9px);
+}
+.score .live {
+  color: var(--d-felt-muted);
+  font-size: 11px;
+  min-width: 6.5em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.score .sfoot {
+  color: var(--d-felt-muted);
+  font-size: 11px;
+  text-align: right;
+  margin-top: -2px;
+}
+
+/* ---- the computer players, clockwise from your left (with four, your partner in the middle) ---- */
+
+.seats {
+  display: grid;
+  gap: 6px;
+  flex: none;
+}
+.seat {
+  min-width: 0;
+  border-radius: 6px;
+  padding: 4px 6px;
+  background: var(--d-seat);
+  border: 2px solid transparent;
+  overflow: hidden;
+}
+.seat.turn {
+  border-color: var(--d-turn);
+}
+.seat .top {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: clamp(12px, calc(var(--cw) * 0.17), 16px);
+  white-space: nowrap;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.seat .top b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.seat .top .n {
+  color: var(--d-felt-muted);
+  font-size: 0.9em;
+  font-variant-numeric: tabular-nums;
+}
+.seat .hand {
+  display: flex;
+  margin-top: 3px;
+  height: calc(var(--ch) * 0.45);
+}
+.seat .hand .card {
+  width: calc(var(--cw) * 0.45);
+  height: calc(var(--ch) * 0.45);
+  margin-left: calc(var(--cw) * -0.32);
+  border-radius: max(3px, calc(var(--cw) * 0.05));
+}
+.seat .hand .card:first-child {
+  margin-left: 0;
+}
+
+/* Badges read by shape and text, not by shade: the dealer a round D, the taker a bold ★ and the trump in a thick gold
+   frame, a pass dashed, the partner plain muted text, a meld its name in a solid frame. */
+.tag {
+  font-size: clamp(11px, calc(var(--cw) * 0.16), 14px);
+  padding: 0 5px;
+  border-radius: 8px;
+  border: 1px solid var(--d-chip-line);
+  color: var(--d-felt-fg);
+  white-space: nowrap;
+  line-height: 16px;
+}
+.tag.dealer {
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  text-align: center;
+  font-weight: 700;
+}
+.tag.taker {
+  border: 2px solid var(--d-gold);
+  font-weight: 700;
+}
+.tag.pass {
+  color: var(--d-felt-muted);
+  border-style: dashed;
+}
+.tag.team {
+  color: var(--d-felt-muted);
+}
+.tag.meld {
+  border: 2px solid var(--d-ok);
+  font-weight: 600;
+}
+
+/* ---- the trump box and the trick ---- */
+
+.mid {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex: 1 0 auto;
+}
+/* The trump box's width again on the far side, so the trick sits in the middle of the felt. */
+.mid::after {
+  content: '';
+  flex: none;
+  width: calc(var(--cw) * 1.5);
+}
+.trumpbox {
+  width: calc(var(--cw) * 1.5);
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+.trumpbox .lbl {
+  font-size: clamp(11px, calc(var(--cw) * 0.16), 15px);
+  color: var(--d-felt-muted);
+  line-height: 1.2;
+}
+.trumpbox .suit {
+  width: var(--cw);
+  height: var(--ch);
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 0 0 2px var(--d-gold);
+  font-size: calc(var(--cw) * 0.7);
+  background: var(--d-seat);
+}
+.trumpbox .suit.red {
+  color: var(--d-red-on-felt);
+}
+.trumpbox .suit.black {
+  color: var(--d-black-on-felt);
+}
+.trick {
+  flex: 1;
+  position: relative;
+  height: calc(var(--ch) * 2.3);
+  min-width: calc(var(--cw) * 3.4);
+}
+.trick .card {
+  position: absolute;
+}
+.trick .p-b {
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+}
+.trick .p-t {
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+}
+.trick .p-l {
+  left: calc(50% - var(--cw) * 1.6);
+  top: 50%;
+  transform: translateY(-50%);
+}
+.trick .p-r {
+  left: calc(50% + var(--cw) * 0.6);
+  top: 50%;
+  transform: translateY(-50%);
+}
+.trick .p-tl {
+  left: calc(50% - var(--cw) * 1.15);
+  top: 0;
+}
+.trick .p-tr {
+  left: calc(50% + var(--cw) * 0.15);
+  top: 0;
+}
+/* The card that wins a full trick: a thick green outline. */
+.trick .card.win {
+  box-shadow: 0 0 0 3px var(--d-ok), 0 1px 2px var(--d-lift);
+  z-index: 1;
+}
+.trick .hint {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--d-hint);
+  font-size: clamp(12px, calc(var(--cw) * 0.2), 16px);
+  text-align: center;
+}
+.card.new {
+  animation: arrive 0.18s ease-out;
+}
+@keyframes arrive {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---- the status, the bid buttons, your badges and your hand ---- */
+
+.status {
+  flex: none;
+  min-height: 20px;
+  font-size: clamp(12px, calc(var(--cw) * 0.2), 16px);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.status small {
+  color: var(--d-felt-muted);
+  font-size: 1em;
+}
+.acts {
+  flex: none;
+  display: flex;
+  gap: var(--cc-space-2);
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  min-height: var(--cc-control-h);
+}
+.acts .suitb {
+  font-size: 16px;
+  padding: 0 14px;
+}
+.acts .suitb.red {
+  color: var(--d-red);
+}
+.mine {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  min-height: 18px;
+  font-size: clamp(12px, calc(var(--cw) * 0.17), 16px);
+}
+.me {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.me .hand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0 calc(var(--cw) * 0.14);
+  min-height: calc(var(--ch) + 12px);
+  border-radius: 6px;
+}
+/* Your move: the hand gets an outline. */
+.me.turn .hand {
+  outline: 2px solid var(--d-turn);
+  outline-offset: 2px;
+}
+.me .row {
+  display: flex;
+}
+.me .card {
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+/* A card you may not play now sits a little lower with its ink softened; the face stays light (no grey wash), so
+   playable or not reads by position as well. */
+.me .card.no {
+  cursor: default;
+  transform: translateY(calc(var(--cw) * 0.14));
+  box-shadow: 0 1px 1px var(--d-lift), inset 0 0 0 1px var(--d-face-line);
+}
+.me .card.no .ix,
+.me .card.no .pip {
+  opacity: 0.4;
+}
+.me .card.ok:hover,
+.me .card.ok:focus-visible {
+  transform: translateY(-10px);
+  z-index: 1;
+}
+.card.shake {
+  animation: shake 0.25s;
+}
+@keyframes shake {
+  25% {
+    translate: -3px 0;
+  }
+  75% {
+    translate: 3px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .me .card {
+    transition: none;
+  }
+  .card.new {
+    animation: none;
+  }
+  .card.shake {
+    animation: none;
+    outline: 2px solid var(--cc-status-ended);
+  }
+}
+
+.board .cc-empty {
+  position: absolute;
+  inset: 0;
+}
+
+/* ---- the covers: the pause, the score sheet, a deal's result, the match's end ---- */
+
+.cover {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--cc-bg) 92%, transparent);
+  border: 1px solid var(--cc-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cc-space-2);
+  text-align: center;
+  padding: var(--cc-space-3);
+  overflow: auto;
+}
+.cover .big {
+  font-size: var(--cc-text-l);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.cover .what {
+  color: var(--cc-fg-muted);
+  overflow-wrap: anywhere;
+}
+.cover .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cc-status-waiting);
+  display: inline-block;
+  margin-right: 6px;
+}
+.cover .buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--cc-space-2);
+}
+.cover .sheet {
+  max-height: 70%;
+  max-width: 100%;
+  overflow: auto;
+}
+.cover table {
+  border-collapse: collapse;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.cover td,
+.cover th {
+  padding: 2px 10px;
+  text-align: right;
+}
+.cover th {
+  color: var(--cc-fg-muted);
+  font-weight: 400;
+}
+.cover td:first-child,
+.cover th:first-child {
+  text-align: left;
+  color: var(--cc-fg-muted);
+}
+.cover td small {
+  color: var(--cc-fg-muted);
+}
+.cover tr.sum td {
+  border-top: 1px solid var(--cc-border);
+  font-weight: 700;
+}
+/* What a deal scored: bold, with its plus sign. */
+.cover tr.add td {
+  font-weight: 700;
+}
+.cover tr.fell td:first-child {
+  font-style: italic;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cc-space-1) var(--cc-space-3);
+  padding: 0 var(--cc-space-3) var(--cc-space-2);
+  color: var(--cc-fg-muted);
+  font-size: var(--cc-text-s);
+  font-variant-numeric: tabular-nums;
+}
+.foot b {
+  color: var(--cc-fg);
+}
+.foot .grow {
+  flex: 1;
+}

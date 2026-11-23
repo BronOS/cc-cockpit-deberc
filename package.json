@@ -1,0 +1,8 @@
+{
+  "name": "cc-cockpit-deberc",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Deberc: the klaberjass-family card game against computer players in a panel for cc-cockpit",
+  "license": "MIT",
+  "scripts": { "test": "node --test test/" }
+}
