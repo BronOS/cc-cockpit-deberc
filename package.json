@@ -1,6 +1,6 @@
 {
   "name": "cc-cockpit-deberc",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Deberc: the klaberjass-family card game against computer players in a panel for cc-cockpit",
   "license": "MIT",

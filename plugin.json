@@ -1,7 +1,7 @@
 {
   "id": "bronos.deberc",
   "name": "Deberc",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "api": 1,
   "description": "Deberc, the klaberjass-family card game, against computer players in a panel, to play while Claude works: four in pairs or three each for themselves, first to 501. It pauses when a Claude tab of the window finishes and waits for you. Reads only the window's tab statuses; never types into a session.",
   "author": "Oleg Bronzov",
